@@ -1,0 +1,128 @@
+# ===== Danh hiệu - tự thêm/sửa/xóa thoải mái, dùng /titleadmin reload để áp dụng =====
+# id:            tên nội bộ (chữ thường, không dấu cách)
+# display:       chữ hiển thị trong chat, dùng mã màu & (vd &6&l)
+# description:   mô tả trong GUI
+# rarity:        COMMON UNCOMMON RARE EPIC LEGENDARY MYTHIC
+# icon:          Material hiển thị trong GUI
+# type:          KILL_MOB | KILL_PLAYER | BREAK_BLOCK | FISH | PLAYTIME_MINUTES | MANUAL | PERMISSION
+#                MANUAL = admin cấp bằng /titleadmin give ; PERMISSION = có quyền astraxtitles.title.<id>
+# target:        số lần/phút cần đạt (bỏ qua với MANUAL/PERMISSION)
+# filter:        (tùy chọn) chỉ tính mục tiêu này, vd ZOMBIE hoặc DIAMOND_ORE ; bỏ trống = tất cả
+# buffs:         attribute -> giá trị. Số thường = cộng thẳng ("4" = +4). Có dấu % = cộng theo % ("5%").
+#                attribute: max_health attack_damage movement_speed armor armor_toughness luck attack_speed
+#                           knockback_resistance block_break_speed jump_strength ...
+# announce:      true = thông báo toàn server khi có người đạt
+# hidden:        true = ẩn trong GUI cho tới khi mở khóa
+titles:
+  newbie:
+    display: "&7Tân Thủ"
+    description: "Chào mừng bạn đến với server!"
+    rarity: COMMON
+    icon: WOODEN_SWORD
+    type: PLAYTIME_MINUTES
+    target: 10
+    buffs: { max_health: 2 }
+
+  zombie_slayer:
+    display: "&2Kẻ Diệt Zombie"
+    description: "Tiêu diệt 100 Zombie."
+    rarity: UNCOMMON
+    icon: ROTTEN_FLESH
+    type: KILL_MOB
+    filter: ZOMBIE
+    target: 100
+    buffs: { attack_damage: 1 }
+
+  monster_hunter:
+    display: "&cThợ Săn Quái Vật"
+    description: "Tiêu diệt 1000 quái vật."
+    rarity: RARE
+    icon: IRON_SWORD
+    type: KILL_MOB
+    target: 1000
+    buffs: { attack_damage: 2, max_health: 2 }
+
+  miner:
+    display: "&6Thợ Mỏ"
+    description: "Đào 2000 block."
+    rarity: UNCOMMON
+    icon: IRON_PICKAXE
+    type: BREAK_BLOCK
+    target: 2000
+    buffs: { block_break_speed: "10%" }
+
+  diamond_seeker:
+    display: "&bTầm Kim Cương"
+    description: "Đào 100 quặng kim cương."
+    rarity: EPIC
+    icon: DIAMOND
+    type: BREAK_BLOCK
+    filter: DIAMOND_ORE
+    target: 100
+    buffs: { block_break_speed: "20%", luck: 1 }
+
+  fisher:
+    display: "&3Cần Thủ"
+    description: "Câu 300 con cá."
+    rarity: UNCOMMON
+    icon: FISHING_ROD
+    type: FISH
+    target: 300
+    buffs: { luck: 1 }
+
+  veteran:
+    display: "&eChiến Binh Kỳ Cựu"
+    description: "Online tổng cộng 50 giờ."
+    rarity: RARE
+    icon: CLOCK
+    type: PLAYTIME_MINUTES
+    target: 3000
+    buffs: { max_health: 4, movement_speed: "3%" }
+
+  duelist:
+    display: "&4&lĐấu Sĩ"
+    description: "Hạ gục 50 người chơi."
+    rarity: EPIC
+    icon: DIAMOND_SWORD
+    type: KILL_PLAYER
+    target: 50
+    announce: true
+    buffs: { attack_damage: 2, armor: 2 }
+
+  dragon_slayer:
+    display: "&5&lSát Long"
+    description: "Hạ gục Ender Dragon."
+    rarity: LEGENDARY
+    icon: DRAGON_HEAD
+    type: KILL_MOB
+    filter: ENDER_DRAGON
+    target: 1
+    buffs: { max_health: 6, attack_damage: 3 }
+
+  wither_bane:
+    display: "&8&lKhắc Tinh Wither"
+    description: "Hạ gục Wither."
+    rarity: LEGENDARY
+    icon: NETHER_STAR
+    type: KILL_MOB
+    filter: WITHER
+    target: 1
+    buffs: { armor: 4, knockback_resistance: "20%" }
+
+  vip:
+    display: "&e&l★ VIP ★"
+    description: "Dành cho thành viên VIP."
+    rarity: EPIC
+    icon: GOLD_INGOT
+    type: PERMISSION           # cấp quyền astraxtitles.title.vip
+    buffs: { max_health: 4, movement_speed: "5%" }
+
+  founder:
+    display: "&c&lSáng Lập"
+    description: "Chỉ dành cho người sáng lập."
+    rarity: MYTHIC
+    icon: NETHER_STAR
+    type: MANUAL
+    hidden: true
+    announce: true
+    buffs: { max_health: 10, attack_damage: 3, armor: 3, luck: 2 }

@@ -1,0 +1,12 @@
+# ===== AstraxTitles =====
+chat:
+  enabled: true                  # false nếu bạn dùng plugin chat khác -> dùng %astraxtitles_prefix%
+  format: "{title}{player}&7: &f{message}"
+  title-format: "&8[%title%&8] "  # %title% = trường display trong titles.yml
+tab:
+  enabled: false                 # hiện danh hiệu trong Tab list
+buffs:
+  enabled: true
+auto-equip-first: true           # tự đeo danh hiệu đầu tiên khi chưa đeo cái nào
+announce-min-rarity: LEGENDARY   # độ hiếm từ mức này trở lên sẽ thông báo toàn server
+autosave-minutes: 5
