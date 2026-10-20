@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class ProgressListener implements Listener {
     private final AstraxTitlesPlugin plugin;
+    private final PairCooldown pairs = new PairCooldown();
     public ProgressListener(AstraxTitlesPlugin plugin) { this.plugin = plugin; }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -31,15 +32,14 @@ public final class ProgressListener implements Listener {
     @EventHandler public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
         PlayerTitleData d = plugin.data(p.getUniqueId()); if (d == null) return;
-        for (TitleDef t : plugin.titles().ofType(AchievementType.PERMISSION))
-            if (!d.has(t.id()) && p.hasPermission("astraxtitles.title." + t.id()) && d.unlock(t.id())) plugin.onUnlocked(p, t);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> { if (p.isOnline()) plugin.checkStates(p); }, 60L); // Elementer nạp dữ liệu bất đồng bộ nên chờ ~3s
         plugin.buffs().apply(p); plugin.refreshTab(p);
     }
     @EventHandler public void onQuit(PlayerQuitEvent e) {
         plugin.buffs().remove(e.getPlayer());
         PlayerTitleData d = plugin.removeData(e.getPlayer().getUniqueId());
         if (d != null) plugin.store().saveAsync(d);
-        plugin.gui().forget(e.getPlayer().getUniqueId());
+        plugin.gui().forget(e.getPlayer().getUniqueId()); pairs.forget(e.getPlayer().getUniqueId());
     }
     @EventHandler public void onRespawn(PlayerRespawnEvent e) { Player p = e.getPlayer(); Bukkit.getScheduler().runTask(plugin, () -> { if (p.isOnline()) plugin.buffs().apply(p); }); }
 
@@ -48,6 +48,10 @@ public final class ProgressListener implements Listener {
     @EventHandler public void onKill(EntityDeathEvent e) {
         LivingEntity dead = e.getEntity(); Player killer = dead.getKiller();
         if (killer == null || killer.equals(dead)) return;
-        plugin.progress(killer, dead instanceof Player ? AchievementType.KILL_PLAYER : AchievementType.KILL_MOB, dead.getType().name(), 1);
+        if (dead instanceof Player victim) { // chống farm: cùng một nạn nhân chỉ tính lại sau anti-farm.same-victim-seconds
+            long cd = plugin.getConfig().getLong("anti-farm.same-victim-seconds", 120) * 1000L;
+            if (!pairs.tryAcquire(killer.getUniqueId(), victim.getUniqueId(), System.currentTimeMillis(), cd)) return;
+            plugin.progress(killer, AchievementType.KILL_PLAYER, "PLAYER", 1);
+        } else plugin.progress(killer, AchievementType.KILL_MOB, dead.getType().name(), 1);
     }
 }

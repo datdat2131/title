@@ -1,12 +1,32 @@
 # ===== AstraxTitles =====
-chat:
-  enabled: true                  # false nếu bạn dùng plugin chat khác -> dùng %astraxtitles_prefix%
-  format: "{title}{player}&7: &f{message}"
-  title-format: "&8[%title%&8] "  # %title% = trường display trong titles.yml
+# Danh hiệu hiện TRƯỚC tên trong Tab:  ᴛᴀɴ ᴛʜᴜ | Steve   (rank của plugin khác nằm phía sau tên)
 tab:
-  enabled: false                 # hiện danh hiệu trong Tab list
+  enabled: true                  # false nếu plugin Tab/TAB của bạn quản lý tab -> dùng %astraxtitles_prefix% trong plugin đó
+  small-caps: true               # tự đổi chữ danh hiệu sang in hoa nhỏ (bỏ dấu tiếng Việt)
+  title-format: "%title% &8| &r" # %title% = display trong titles.yml
+# Chat: mặc định TẮT (danh hiệu chỉ hiện ở Tab)
+chat:
+  enabled: false
+  format: "{title}{player}&7: &f{message}"
+  small-caps: false
+  title-format: "&8[%title%&8] "
 buffs:
   enabled: true
 auto-equip-first: true           # tự đeo danh hiệu đầu tiên khi chưa đeo cái nào
 announce-min-rarity: LEGENDARY   # độ hiếm từ mức này trở lên sẽ thông báo toàn server
 autosave-minutes: 5
+poll-seconds: 5                  # bao lâu kiểm tra nhiệm vụ "mở khóa nguyên tố" của plugin khác (giây)
+anti-farm:
+  same-victim-seconds: 120       # hạ gục cùng một người chơi chỉ tính lại sau ngần này giây
+boss-credit-percent: 5           # nhiệm vụ BOSS_KILL: gây >= % máu boss thì được tính (như ngưỡng thưởng của Elementer)
+max-damage-reduction: 80         # trần % giảm sát thương nhận từ nội tại
+# Nguyên tố của boss AstraxElementer, dùng cho nội tại DAMAGE_REDUCTION_FROM_ELEMENT
+boss-elements:
+  fire_lord: FIRE
+  ice_queen: ICE
+  thunder_god: LIGHTNING
+  stone_guardian: EARTH
+  wind_lord: WIND
+  light_paladin: LIGHT
+  dark_lord: DARK
+  dragon_lord: DRAGON

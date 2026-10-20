@@ -63,18 +63,24 @@ public final class TitleGui implements Listener {
         List<Component> lore = new ArrayList<>();
         lore.add(raw(t.rarity().color() + t.rarity().display()));
         if (!t.description().isBlank()) lore.add(c("&7" + t.description()));
+        if (!has && !t.requirements().isEmpty()) { // nhiệm vụ + tiến độ
+            lore.add(Component.empty()); lore.add(raw("§bNhiệm vụ:"));
+            for (int i = 0; i < t.requirements().size(); i++) {
+                Requirement r = t.requirements().get(i); long cur = Math.min(d.progressOf(Requirement.reqKey(t.id(), i)), r.target()); boolean done = cur >= r.target();
+                lore.add(raw((done ? "§a ✔ " : "§c ✘ ") + "§f" + r.describe() + (!done && r.type().counted() && r.target() > 1 ? " §7(" + cur + "/" + r.target() + ")" : "")));
+            }
+        } else if (!has) { lore.add(Component.empty()); lore.add(raw("§c✘ Nhận từ sự kiện/admin")); }
         if (!t.buffs().isEmpty()) { lore.add(Component.empty()); lore.add(raw("§6Buff khi đeo:")); t.buffs().forEach((k, v) -> lore.add(raw("§e • " + pretty(k) + " §f" + v.describe()))); }
+        if (!t.passives().isEmpty()) { lore.add(Component.empty()); lore.add(raw("§dNội tại:")); for (PassiveDef p : t.passives()) lore.add(raw("§d • §7" + p.describe())); }
         lore.add(Component.empty());
         if (has) lore.add(raw(eq ? "§a✔ Đang đeo §7(bấm để gỡ)" : "§eBấm để đeo"));
-        else if (t.type().counted()) { long cur = Math.min(d.progressOf(t.id()), t.target()); lore.add(raw(bar(cur / (double) t.target(), 15) + " §7" + cur + "/" + t.target())); lore.add(raw("§c✘ Chưa mở khóa")); }
-        else lore.add(raw("§c✘ Nhận từ sự kiện/admin"));
         meta.lore(lore);
         if (eq) { meta.addEnchant(Enchantment.UNBREAKING, 1, true); meta.addItemFlags(ItemFlag.HIDE_ENCHANTS); }
         it.setItemMeta(meta); return it;
     }
     private static String pretty(String attr) {
         return switch (attr) { case "max_health" -> "Máu tối đa"; case "attack_damage" -> "Sát thương"; case "movement_speed" -> "Tốc độ chạy"; case "armor" -> "Giáp";
-            case "armor_toughness" -> "Độ cứng giáp"; case "luck" -> "May mắn"; case "attack_speed" -> "Tốc độ đánh"; case "knockback_resistance" -> "Kháng đẩy lùi";
+            case "armor_toughness" -> "Độ cứng giáp"; case "luck" -> "May mắn"; case "attack_speed" -> "Tốc độ tấn công"; case "knockback_resistance" -> "Kháng đẩy lùi";
             case "block_break_speed" -> "Tốc độ đào"; case "jump_strength" -> "Lực nhảy"; default -> attr; };
     }
 

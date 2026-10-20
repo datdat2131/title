@@ -13,7 +13,11 @@ import vn.astrax.titles.commands.TitleCommand;
 import vn.astrax.titles.config.TitleLoader;
 import vn.astrax.titles.gui.TitleGui;
 import vn.astrax.titles.hook.PapiHook;
+import vn.astrax.titles.hook.ElementerBridge;
+import vn.astrax.titles.hook.NguyenToBridge;
+import vn.astrax.titles.listener.BossListener;
 import vn.astrax.titles.listener.ChatListener;
+import vn.astrax.titles.listener.PassiveListener;
 import vn.astrax.titles.listener.ProgressListener;
 import vn.astrax.titles.model.*;
 import vn.astrax.titles.storage.DataStore;
@@ -27,7 +31,10 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
     private final TitleRegistry registry = new TitleRegistry();
     private final Map<UUID, PlayerTitleData> cache = new ConcurrentHashMap<>();
     private DataStore store; private BuffManager buffs; private TitleGui gui;
-    private int autosaveTask = -1, playtimeTask = -1;
+    private final ElementerBridge elementer = new ElementerBridge(getLogger());
+    private final NguyenToBridge nguyento = new NguyenToBridge();
+    private PassiveListener passives; private BossListener bosses;
+    private int autosaveTask = -1, playtimeTask = -1, pollTask = -1;
 
     @Override public void onEnable() {
         saveDefaultConfig();
@@ -35,7 +42,8 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
         buffs = new BuffManager(this); gui = new TitleGui(this);
         reloadAll();
         var pm = getServer().getPluginManager();
-        pm.registerEvents(new ProgressListener(this), this); pm.registerEvents(new ChatListener(this), this); pm.registerEvents(gui, this);
+        passives = new PassiveListener(this); bosses = new BossListener(this);
+        pm.registerEvents(new ProgressListener(this), this); pm.registerEvents(passives, this); pm.registerEvents(bosses, this); pm.registerEvents(new ChatListener(this), this); pm.registerEvents(gui, this);
         var tc = new TitleCommand(this); var ac = new TitleAdminCommand(this);
         Objects.requireNonNull(getCommand("title")).setExecutor(tc); getCommand("title").setTabCompleter(tc);
         Objects.requireNonNull(getCommand("titleadmin")).setExecutor(ac); getCommand("titleadmin").setTabCompleter(ac);
@@ -43,6 +51,10 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
         long every = Math.max(1, getConfig().getInt("autosave-minutes", 5)) * 1200L;
         autosaveTask = Bukkit.getScheduler().runTaskTimer(this, () -> { for (PlayerTitleData d : cache.values()) if (d.dirty()) store.saveAsync(d); }, every, every).getTaskId();
         playtimeTask = Bukkit.getScheduler().runTaskTimer(this, this::tickPlaytime, 1200L, 1200L).getTaskId();
+        long poll = Math.max(1, getConfig().getInt("poll-seconds", 5)) * 20L; // kiểm tra nhiệm vụ mở khóa nguyên tố của plugin khác
+        pollTask = Bukkit.getScheduler().runTaskTimer(this, () -> { for (Player p : Bukkit.getOnlinePlayers()) checkStates(p); bosses.purge(); }, 100L, poll).getTaskId();
+        if (!elementer.available()) getLogger().info("Chưa thấy AstraxElementer: nhiệm vụ ELEMENTER_UNLOCK sẽ đạt khi plugin đó chạy.");
+        if (!nguyento.available()) getLogger().info("Chưa thấy NguyenTo: nhiệm vụ NGUYENTO_UNLOCK sẽ đạt khi plugin đó chạy.");
         if (pm.isPluginEnabled("PlaceholderAPI")) { new PapiHook(this).register(); getLogger().info("Đã đăng ký PlaceholderAPI (%astraxtitles_*%)."); }
         getLogger().info("AstraxTitles bật: " + registry.size() + " danh hiệu.");
     }
@@ -50,6 +62,7 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
     @Override public void onDisable() {
         if (autosaveTask != -1) Bukkit.getScheduler().cancelTask(autosaveTask);
         if (playtimeTask != -1) Bukkit.getScheduler().cancelTask(playtimeTask);
+        if (pollTask != -1) Bukkit.getScheduler().cancelTask(pollTask);
         for (Player p : Bukkit.getOnlinePlayers()) buffs.remove(p);
         for (PlayerTitleData d : cache.values()) store.saveAsync(d);
         cache.clear(); store.close();
@@ -67,6 +80,22 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
         for (Player p : Bukkit.getOnlinePlayers()) progress(p, AchievementType.PLAYTIME_MINUTES, "MINUTE", 1);
     }
 
+    public ElementerBridge elementer() { return elementer; }
+    public NguyenToBridge nguyento() { return nguyento; }
+    /** Nội tại của danh hiệu đang đeo (rỗng nếu không có). */
+    public List<PassiveDef> passivesOf(UUID id) {
+        PlayerTitleData d = cache.get(id); TitleDef t = d == null ? null : registry.get(d.selected());
+        return t == null ? List.of() : t.passives();
+    }
+    /** Kiểm tra nhiệm vụ dạng trạng thái (mở khóa nguyên tố ở Elementer/NguyenTo, permission) và mở khóa danh hiệu đủ điều kiện. */
+    public void checkStates(Player p) {
+        PlayerTitleData d = cache.get(p.getUniqueId()); if (d == null) return;
+        for (TitleDef t : registry.checkStates(d, (type, filter, def) -> switch (type) {
+            case PERMISSION -> p.hasPermission("astraxtitles.title." + def.id());
+            case ELEMENTER_UNLOCK -> elementer.hasUnlocked(p.getUniqueId(), filter);
+            case NGUYENTO_UNLOCK -> nguyento.owns(p, filter);
+            default -> false; })) onUnlocked(p, t);
+    }
     public TitleRegistry titles() { return registry; }
     public BuffManager buffs() { return buffs; }
     public DataStore store() { return store; }
@@ -100,18 +129,25 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
 
     public boolean equip(Player p, String id) {
         PlayerTitleData d = cache.get(p.getUniqueId()); if (d == null || !d.select(id)) return false;
-        buffs.apply(p); refreshTab(p); return true;
+        passives.reset(p); buffs.apply(p); refreshTab(p); return true;
     }
-    public void unequip(Player p) { PlayerTitleData d = cache.get(p.getUniqueId()); if (d != null) { d.select(null); buffs.apply(p); refreshTab(p); } }
+    public void unequip(Player p) { PlayerTitleData d = cache.get(p.getUniqueId()); if (d != null) { d.select(null); passives.reset(p); buffs.apply(p); refreshTab(p); } }
 
-    /** Prefix dạng "[Title] " (Component rỗng nếu không đeo). */
-    public Component prefix(UUID id) {
+    /** Prefix dùng cho Tab và PlaceholderAPI (Component rỗng nếu không đeo). */
+    public Component prefix(UUID id) { return build(id, "tab"); }
+    /** Prefix dùng cho chat (chỉ khi chat.enabled=true). */
+    public Component chatPrefix(UUID id) { return build(id, "chat"); }
+
+    private Component build(UUID id, String section) {
         PlayerTitleData d = cache.get(id); TitleDef t = d == null ? null : registry.get(d.selected());
         if (t == null) return Component.empty();
-        return AMP.deserialize(getConfig().getString("chat.title-format", "&8[%title%&8] ").replace("%title%", t.display()));
+        String shown = getConfig().getBoolean(section + ".small-caps", true) ? SmallCaps.convert(t.display()) : t.display();
+        return AMP.deserialize(getConfig().getString(section + ".title-format", "%title% &8| &r").replace("%title%", shown));
     }
+
+    /** Đặt tên trong Tab: "<title> | Tên". Phần rank (suffix) do plugin khác thêm phía sau nếu có. */
     public void refreshTab(Player p) {
-        if (!getConfig().getBoolean("tab.enabled", false)) return;
+        if (!getConfig().getBoolean("tab.enabled", true)) return;
         p.playerListName(prefix(p.getUniqueId()).append(Component.text(p.getName())));
     }
 }
