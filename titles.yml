@@ -1,6 +1,8 @@
 # ===== 13 danh hiệu nhiệm vụ - sửa tự do rồi /titleadmin reload =====
 # requirements:  danh sách nhiệm vụ, phải hoàn thành TẤT CẢ mới mở khóa (có thông báo cho người chơi khi mở khóa)
-#   type: PLAYTIME_MINUTES | KILL_PLAYER | KILL_MOB | BREAK_BLOCK | FISH | BOSS_KILL
+#   type: PLAYTIME_MINUTES | KILL_PLAYER | KILL_MOB | BREAK_BLOCK | FISH | BOSS_KILL | TRAVEL_BLOCKS
+#         KILL_STREAK       -> chuỗi hạ gục liên tiếp, reset khi chết (filter PLAYER = chỉ tính người chơi, ANY = tính cả quái)
+#         PERMISSION_NODE   -> có quyền/nhóm bất kỳ, vd group.vip3 (LuckPerms)
 #         ELEMENTER_UNLOCK  -> mở khóa nguyên tố ở plugin AstraxElementer  (filter: FIRE ICE LIGHTNING EARTH WIND LIGHT DARK DRAGON)
 #         NGUYENTO_UNLOCK   -> mở khóa nguyên tố ở plugin NguyenTo         (filter: lua nuoc dat gio set bang bong_toi anh_sang)
 #         PERMISSION        -> có quyền astraxtitles.title.<id>
@@ -168,3 +170,54 @@ titles:
       - {type: WEAKEN_ON_HIT, name: "Ám Ảnh", chance: 20, duration: 4}
       - {type: LOW_HP_BOOST, name: "Tử Vực", threshold: 25, value: 35, duration: 6, cooldown: 30}
       - {type: DAMAGE_REDUCTION_FROM_ELEMENT, name: "Hắc Giới", value: 15, filter: LIGHT}
+
+  khai_khoang:
+    display: "&e✧ Khai Khoáng"
+    description: "Người đào mỏ không biết mệt."
+    rarity: RARE
+    icon: DIAMOND_PICKAXE
+    requirements:
+      - {type: BREAK_BLOCK, target: 4000}
+      - {type: KILL_PLAYER, target: 10}
+    buffs: { block_break_speed: 2, movement_speed: "20%", attack_speed: 0.15 }
+
+  nha_tham_hiem:
+    display: "&a✿ Nhà Thám Hiểm"
+    description: "Mọi chân trời đều có dấu chân bạn."
+    rarity: RARE
+    icon: COMPASS
+    requirements:
+      - {type: TRAVEL_BLOCKS, target: 2000}
+    buffs: { movement_speed: "30%", max_health: 5, armor: 2 }
+
+  vip_ruby:
+    display: "&c✪ VIP Ruby"
+    description: "Dành cho thành viên VIP3 (Ruby)."
+    rarity: EPIC
+    icon: REDSTONE_BLOCK
+    requirements:
+      - {type: PERMISSION_NODE, filter: "group.vip3", label: "Đạt rank VIP3 (Ruby)"}
+    buffs: { attack_damage: 2, max_health: 6, armor: 3, attack_speed: 0.5 }
+
+  tho_san_boss:
+    display: "&6★ Thợ Săn Boss"
+    description: "Boss nào cũng phải cúi đầu."
+    rarity: EPIC
+    icon: WITHER_SKELETON_SKULL
+    requirements:
+      - {type: BOSS_KILL, target: 10, label: "Tiêu diệt 10 boss bất kỳ"}
+    buffs: { attack_damage: 2, attack_speed: 0.25 }
+    passives:
+      - {type: BOSS_DAMAGE_PERCENT, name: "Sát Boss", value: 50}
+
+  bat_khuat:
+    display: "&3⚔ Chiến Binh Bất Khuất"
+    description: "Không gục ngã, không lùi bước."
+    rarity: LEGENDARY
+    icon: SHIELD
+    announce: true
+    requirements:
+      - {type: KILL_STREAK, filter: PLAYER, target: 50, label: "Đạt chuỗi hạ gục 50 người chơi (không chết)"}
+    buffs: { attack_damage: 2, max_health: 5 }
+    passives:
+      - {type: DAMAGE_REDUCTION_PERCENT, name: "Bất Khuất", value: 20}

@@ -21,6 +21,11 @@ class TitleSystemTest {
         r.register(def("dragon", Rarity.LEGENDARY, count(AchievementType.BOSS_KILL, 1, "dragon_lord"), state(AchievementType.ELEMENTER_UNLOCK, "DRAGON")));
         r.register(def("vip", Rarity.EPIC, state(AchievementType.PERMISSION, null)));
         r.register(def("manual", Rarity.MYTHIC));
+        r.register(def("streak", Rarity.LEGENDARY, count(AchievementType.KILL_STREAK, 3, "PLAYER")));
+        r.register(def("rank", Rarity.EPIC, new Requirement(AchievementType.PERMISSION_NODE, "group.vip3", 1, null)));
+        r.register(def("walker", Rarity.RARE, count(AchievementType.TRAVEL_BLOCKS, 100, null)));
+        r.register(def("bosses", Rarity.EPIC, count(AchievementType.BOSS_KILL, 3, null)));
+        r.register(def("miner", Rarity.RARE, count(AchievementType.BREAK_BLOCK, 3, null), count(AchievementType.KILL_PLAYER, 2, null)));
         return r;
     }
     static StateProbe probe(Set<String> has) { return (t, f, d) -> has.contains(t + ":" + f) || has.contains(t + ":" + d.id()); }
@@ -105,5 +110,30 @@ class TitleSystemTest {
         assertTrue(new PassiveDef(PassiveType.DODGE, null, 0, 0, 20, 0, 0, 0, null).describe().contains("20% né tránh"));
         assertTrue(new PassiveDef(PassiveType.DAMAGE_REDUCTION_FROM_ELEMENT, null, 15, 0, 100, 0, 0, 0, "DARK").describe().contains("Bóng Tối"));
         assertEquals("ᴛᴀɴ ᴛʜᴜ", SmallCaps.convert("Tân Thủ")); assertEquals("&6ᴍɪɴᴇʀ", SmallCaps.convert("&6Miner"));
+    }
+    @Test void killStreakKeepsBestAndNeverGoesDown() {
+        TitleRegistry r = reg(); PlayerTitleData d = new PlayerTitleData(UUID.randomUUID());
+        assertTrue(r.progressMax(d, AchievementType.KILL_STREAK, "PLAYER", 2).isEmpty()); assertTrue(r.progressMax(d, AchievementType.KILL_STREAK, "PLAYER", 1).isEmpty());
+        assertEquals(2, d.progressOf(Requirement.reqKey("streak", 0))); // không tụt khi giá trị nhỏ hơn
+        assertTrue(r.progressMax(d, AchievementType.KILL_STREAK, "ANY", 50).isEmpty()); // filter PLAYER không nhận chuỗi ANY
+        assertEquals(1, r.progressMax(d, AchievementType.KILL_STREAK, "PLAYER", 3).size()); assertTrue(d.has("streak"));
+    }
+    @Test void rankPermissionNode() {
+        TitleRegistry r = reg(); PlayerTitleData d = new PlayerTitleData(UUID.randomUUID());
+        assertTrue(r.checkStates(d, (t, f, def) -> t == AchievementType.PERMISSION_NODE && "group.vip2".equals(f)).isEmpty());
+        assertEquals(1, r.checkStates(d, (t, f, def) -> t == AchievementType.PERMISSION_NODE && "group.vip3".equals(f)).size()); assertTrue(d.has("rank"));
+        assertTrue(Requirement.class != null && new Requirement(AchievementType.PERMISSION_NODE, "group.vip3", 1, null).describe().contains("group.vip3"));
+    }
+    @Test void travelAndAnyBossCount() {
+        TitleRegistry r = reg(); PlayerTitleData d = new PlayerTitleData(UUID.randomUUID());
+        assertTrue(r.progress(d, AchievementType.TRAVEL_BLOCKS, "BLOCK", 99).isEmpty()); assertEquals(1, r.progress(d, AchievementType.TRAVEL_BLOCKS, "BLOCK", 1).size());
+        r.progress(d, AchievementType.BOSS_KILL, "ender_dragon", 1); r.progress(d, AchievementType.BOSS_KILL, "wither", 1); assertFalse(d.has("bosses"));
+        assertEquals(1, r.progress(d, AchievementType.BOSS_KILL, "dragon_lord", 1).stream().filter(t -> t.id().equals("bosses")).count());
+    }
+    @Test void miningPlusKillsNeedBoth() {
+        TitleRegistry r = reg(); PlayerTitleData d = new PlayerTitleData(UUID.randomUUID());
+        r.progress(d, AchievementType.BREAK_BLOCK, "STONE", 5); assertFalse(d.has("miner"));
+        r.progress(d, AchievementType.KILL_PLAYER, "PLAYER", 2); assertTrue(d.has("miner"));
+        assertTrue(Requirement.reqKey("X", 1).equals("x~1"));
     }
 }

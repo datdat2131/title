@@ -62,4 +62,22 @@ public final class TitleRegistry {
         }
         return out == null ? List.of() : out;
     }
+
+    /** Đặt tiến độ = max(hiện tại, value). Dùng cho chuỗi hạ gục (giữ kỷ lục cao nhất). */
+    public List<TitleDef> progressMax(PlayerTitleData d, AchievementType type, String key, long value) {
+        List<TitleDef> out = null;
+        for (TitleDef def : ofType(type)) {
+            if (d.has(def.id())) continue;
+            boolean touched = false;
+            for (int i = 0; i < def.requirements().size(); i++) {
+                Requirement r = def.requirements().get(i);
+                if (r.type() != type || !r.matches(key)) continue;
+                String k = Requirement.reqKey(def.id(), i);
+                if (d.progressOf(k) < value) d.setProgress(k, value);
+                touched = true;
+            }
+            if (touched && complete(d, def) && d.unlock(def.id())) { if (out == null) out = new ArrayList<>(); out.add(def); }
+        }
+        return out == null ? List.of() : out;
+    }
 }

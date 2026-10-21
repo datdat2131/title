@@ -30,3 +30,6 @@ boss-elements:
   light_paladin: LIGHT
   dark_lord: DARK
   dragon_lord: DRAGON
+travel:
+  max-sample-blocks: 150         # bước nhảy quá lớn trong 2 giây coi là dịch chuyển, không tính
+  count-creative: false          # có tính di chuyển ở chế độ Creative không

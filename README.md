@@ -1,8 +1,8 @@
-# AstraxTitles 1.1.0 - Danh hiệu nhiệm vụ cho BoxMine RPG
+# AstraxTitles 1.2.0 - Danh hiệu nhiệm vụ cho BoxMine RPG
 
 Danh hiệu mở khóa bằng nhiệm vụ, mỗi danh hiệu có **buff** và **nội tại** riêng, hiển thị **trước tên trong Tab** (chữ in hoa nhỏ). Paper 1.21.4, Java 21.
 
-> **Trạng thái:** logic (nhiệm vụ, tiến độ, mô tả nội tại) đã chạy 14 test đạt; phần Bukkit (nội tại chiến đấu, GUI, hook plugin khác) **chưa build bằng Maven và chưa chạy trên server thật**. Hãy thử trên server test.
+> **Trạng thái:** logic (nhiệm vụ, tiến độ, mô tả nội tại) đã chạy 18 test đạt; phần Bukkit (nội tại chiến đấu, GUI, hook plugin khác) **chưa build bằng Maven và chưa chạy trên server thật**. Hãy thử trên server test.
 
 ## Tích hợp với 2 plugin của bạn (hai plugin KHÁC NHAU)
 | Plugin | Cách đọc | Nhiệm vụ trong titles.yml |
@@ -17,7 +17,7 @@ Kiểm tra kết nối: `/titleadmin check <tên>`.
 Mỗi danh hiệu có danh sách `requirements`; phải hoàn thành **tất cả**. Khi đủ, người chơi nhận: tin nhắn, title lớn giữa màn hình, âm thanh, và thông báo toàn server nếu danh hiệu Huyền Thoại trở lên (hoặc `announce: true`). Danh hiệu đầu tiên mở được tự động đeo.
 Nhiệm vụ "mở khóa nguyên tố" được kiểm tra mỗi `poll-seconds` (mặc định 5 giây) và ghi nhớ; nên mở khóa xong sẽ có thông báo trong vài giây. Nhiệm vụ đếm (kill, online...) cập nhật tức thì.
 
-## 13 danh hiệu mẫu
+## 18 danh hiệu mẫu
 | # | Danh hiệu | Nhiệm vụ | Buff | Nội tại |
 |---|---|---|---|---|
 | 1 | Tân Thủ | Online 15 phút | đào +1, đánh +0.15, +1 máu | - |
@@ -33,8 +33,18 @@ Nhiệm vụ "mở khóa nguyên tố" được kiểm tra mỗi `poll-seconds` 
 | 11 | Long Thần | Hạ boss Long Vương Hủy Diệt + Elementer Rồng | +2.5 dame, +5 máu, đánh +0.5 | Long Uy / Long Tức / Long Hồn |
 | 12 | Thánh Đế | NguyenTo Ánh Sáng | +2.5 dame, +20% tốc độ, +5 máu | Quang Kích / Thánh Quang / Quang Hồi |
 | 13 | Bóng Tối | Elementer Bóng Tối + NguyenTo Bóng Tối + 100 kill | +3 dame, +8 máu, đánh +0.6, +10% tốc độ | Hắc Thực / Ám Ảnh / Tử Vực / Hắc Giới (+10% hút máu) |
+| 14 | Khai Khoáng | Đào 4000 block + hạ 10 người chơi | đào +2, +20% tốc độ, đánh +0.15 | - |
+| 15 | Nhà Thám Hiểm | Di chuyển 2000 block | +30% tốc độ, +5 máu, +2 giáp | - |
+| 16 | VIP Ruby | Có nhóm `group.vip3` (rank VIP3 Ruby) | +2 dame, +6 máu, +3 giáp, đánh +0.5 | - |
+| 17 | Thợ Săn Boss | Hạ 10 boss bất kỳ | +2 dame, đánh +0.25 | +50% sát thương lên Boss |
+| 18 | Chiến Binh Bất Khuất | Chuỗi hạ gục 50 người chơi (không chết) | +2 dame, +5 máu | giảm 20% sát thương nhận |
 
 ## Các điểm mình đã diễn giải (sửa trong titles.yml nếu khác ý bạn)
+- **Khai Khoáng "10 kill":** hiểu là hạ 10 **người chơi**. Muốn đổi sang quái: `type: KILL_MOB`.
+- **VIP Ruby:** kiểm tra quyền `group.vip3` (LuckPerms tự cấp quyền `group.<tên nhóm>` cho thành viên nhóm, kể cả nhóm kế thừa). Nếu nhóm của bạn tên khác (vd `ruby`), sửa `filter`. Không dùng LuckPerms thì đặt `filter` là một permission bất kỳ.
+- **Thợ Săn Boss:** tính boss AstraxElementer và boss vanilla có giao diện Boss (Ender Dragon, Wither). Warden/Elder Guardian và boss của plugin khác chưa tính.
+- **Chuỗi hạ gục:** mặc định chỉ tính **người chơi** (`filter: PLAYER`), reset khi chết, lưu qua restart. Muốn tính cả quái: `filter: ANY`.
+- **Di chuyển:** đo quãng đường ngang mỗi 2 giây; không tính teleport, Creative/Spectator, và bước nhảy > 150 block. Đi thuyền/ngựa/cánh cánh vẫn tính; máy chạy tự động (nước, ray) có thể farm được.
 - **"Tốc độ đào +1" (Tân Thủ):** áp đúng số bạn ghi = `block_break_speed +1` (đào nhanh gấp đôi). Nếu muốn nhẹ hơn, đổi thành `"20%"`.
 - **HP:** `+1 máu` = 1 điểm máu (nửa tim), cùng thang với NguyenTo (2 máu = 1 tim).
 - **Hỏa Viễn:** "đòn đánh gây cháy +20% dame" = đòn đánh luôn thiêu đốt 3s và **+20% sát thương lên mục tiêu đang cháy**.

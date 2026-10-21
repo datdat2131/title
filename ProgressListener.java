@@ -52,6 +52,8 @@ public final class ProgressListener implements Listener {
             long cd = plugin.getConfig().getLong("anti-farm.same-victim-seconds", 120) * 1000L;
             if (!pairs.tryAcquire(killer.getUniqueId(), victim.getUniqueId(), System.currentTimeMillis(), cd)) return;
             plugin.progress(killer, AchievementType.KILL_PLAYER, "PLAYER", 1);
-        } else plugin.progress(killer, AchievementType.KILL_MOB, dead.getType().name(), 1);
+            plugin.streakKill(killer, true);
+        } else { plugin.progress(killer, AchievementType.KILL_MOB, dead.getType().name(), 1); plugin.streakKill(killer, false); }
     }
+    @EventHandler public void onPlayerDeath(org.bukkit.event.entity.PlayerDeathEvent e) { plugin.resetStreak(e.getEntity()); }
 }

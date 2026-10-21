@@ -29,6 +29,9 @@ public record Requirement(AchievementType type, String filter, long target, Stri
             case BOSS_KILL -> "Tiêu diệt boss " + (filter == null ? "bất kỳ" : filter) + (target > 1 ? " x" + target : "");
             case ELEMENTER_UNLOCK -> "Mở khóa nguyên tố " + elementerName(filter) + " (plugin Elementer)";
             case NGUYENTO_UNLOCK -> "Mở khóa nguyên tố " + nguyentoName(filter) + " (plugin NguyenTo)";
+            case TRAVEL_BLOCKS -> "Di chuyển " + target + " block";
+            case KILL_STREAK -> "Đạt chuỗi hạ gục " + target + ("ANY".equalsIgnoreCase(filter) ? " (tính cả quái)" : " người chơi liên tiếp") + ", không chết";
+            case PERMISSION_NODE -> "Đạt rank/quyền " + (filter == null ? "?" : filter);
             case PERMISSION -> "Nhận từ quyền đặc biệt";
             case MANUAL -> "Do admin cấp";
         };

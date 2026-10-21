@@ -18,6 +18,7 @@ import vn.astrax.titles.hook.NguyenToBridge;
 import vn.astrax.titles.listener.BossListener;
 import vn.astrax.titles.listener.ChatListener;
 import vn.astrax.titles.listener.PassiveListener;
+import vn.astrax.titles.listener.TravelTracker;
 import vn.astrax.titles.listener.ProgressListener;
 import vn.astrax.titles.model.*;
 import vn.astrax.titles.storage.DataStore;
@@ -33,7 +34,7 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
     private DataStore store; private BuffManager buffs; private TitleGui gui;
     private final ElementerBridge elementer = new ElementerBridge(getLogger());
     private final NguyenToBridge nguyento = new NguyenToBridge();
-    private PassiveListener passives; private BossListener bosses;
+    private PassiveListener passives; private BossListener bosses; private TravelTracker travel;
     private int autosaveTask = -1, playtimeTask = -1, pollTask = -1;
 
     @Override public void onEnable() {
@@ -42,8 +43,8 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
         buffs = new BuffManager(this); gui = new TitleGui(this);
         reloadAll();
         var pm = getServer().getPluginManager();
-        passives = new PassiveListener(this); bosses = new BossListener(this);
-        pm.registerEvents(new ProgressListener(this), this); pm.registerEvents(passives, this); pm.registerEvents(bosses, this); pm.registerEvents(new ChatListener(this), this); pm.registerEvents(gui, this);
+        passives = new PassiveListener(this); bosses = new BossListener(this); travel = new TravelTracker(this);
+        pm.registerEvents(new ProgressListener(this), this); pm.registerEvents(passives, this); pm.registerEvents(bosses, this); pm.registerEvents(travel, this); pm.registerEvents(new ChatListener(this), this); pm.registerEvents(gui, this);
         var tc = new TitleCommand(this); var ac = new TitleAdminCommand(this);
         Objects.requireNonNull(getCommand("title")).setExecutor(tc); getCommand("title").setTabCompleter(tc);
         Objects.requireNonNull(getCommand("titleadmin")).setExecutor(ac); getCommand("titleadmin").setTabCompleter(ac);
@@ -51,6 +52,7 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
         long every = Math.max(1, getConfig().getInt("autosave-minutes", 5)) * 1200L;
         autosaveTask = Bukkit.getScheduler().runTaskTimer(this, () -> { for (PlayerTitleData d : cache.values()) if (d.dirty()) store.saveAsync(d); }, every, every).getTaskId();
         playtimeTask = Bukkit.getScheduler().runTaskTimer(this, this::tickPlaytime, 1200L, 1200L).getTaskId();
+        Bukkit.getScheduler().runTaskTimer(this, this::tickTravel, 40L, 40L);
         long poll = Math.max(1, getConfig().getInt("poll-seconds", 5)) * 20L; // kiểm tra nhiệm vụ mở khóa nguyên tố của plugin khác
         pollTask = Bukkit.getScheduler().runTaskTimer(this, () -> { for (Player p : Bukkit.getOnlinePlayers()) checkStates(p); bosses.purge(); }, 100L, poll).getTaskId();
         if (!elementer.available()) getLogger().info("Chưa thấy AstraxElementer: nhiệm vụ ELEMENTER_UNLOCK sẽ đạt khi plugin đó chạy.");
@@ -76,6 +78,7 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
     }
 
     /** Playtime: +1 phút cho mỗi người chơi online. */
+    private void tickTravel() { travel.tick(Bukkit.getOnlinePlayers()); }
     private void tickPlaytime() {
         for (Player p : Bukkit.getOnlinePlayers()) progress(p, AchievementType.PLAYTIME_MINUTES, "MINUTE", 1);
     }
@@ -94,7 +97,23 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
             case PERMISSION -> p.hasPermission("astraxtitles.title." + def.id());
             case ELEMENTER_UNLOCK -> elementer.hasUnlocked(p.getUniqueId(), filter);
             case NGUYENTO_UNLOCK -> nguyento.owns(p, filter);
+            case PERMISSION_NODE -> filter != null && p.hasPermission(filter);
             default -> false; })) onUnlocked(p, t);
+    }
+    /** Chuỗi hạ gục: tăng khi hạ gục, reset khi chết. Lưu trong dữ liệu người chơi (không mất khi restart). */
+    public void streakKill(Player p, boolean playerKill) {
+        PlayerTitleData d = cache.get(p.getUniqueId()); if (d == null) return;
+        long any = d.progressOf("_streak~any") + 1; d.setProgress("_streak~any", any);
+        for (TitleDef t : registry.progressMax(d, AchievementType.KILL_STREAK, "ANY", any)) onUnlocked(p, t);
+        if (playerKill) {
+            long pl = d.progressOf("_streak~player") + 1; d.setProgress("_streak~player", pl);
+            for (TitleDef t : registry.progressMax(d, AchievementType.KILL_STREAK, "PLAYER", pl)) onUnlocked(p, t);
+        }
+    }
+    public void resetStreak(Player p) {
+        PlayerTitleData d = cache.get(p.getUniqueId()); if (d == null) return;
+        if (d.progressOf("_streak~any") != 0) d.setProgress("_streak~any", 0);
+        if (d.progressOf("_streak~player") != 0) d.setProgress("_streak~player", 0);
     }
     public TitleRegistry titles() { return registry; }
     public BuffManager buffs() { return buffs; }
