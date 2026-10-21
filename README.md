@@ -1,4 +1,4 @@
-# AstraxTitles 1.3.0 - Danh hiệu nhiệm vụ cho BoxMine RPG
+# AstraxTitles 1.3.1 - Danh hiệu nhiệm vụ cho BoxMine RPG
 
 Danh hiệu mở khóa bằng nhiệm vụ, mỗi danh hiệu có **buff** và **nội tại** riêng, hiển thị **trước tên trong Tab** (chữ in hoa nhỏ). Paper 1.21.4, Java 21.
 
@@ -74,14 +74,21 @@ NguyenTo đặt giá trị gốc (base) của máu/sát thương/tốc độ; As
 - `/titleadmin buff <id> attack_damage remove` để xóa buff
 Mỗi lần sửa plugin tự sao lưu `titles.yml.bak` rồi tải lại. Lưu ý: lệnh ghi lại cả file nên có thể làm mất một số dòng chú thích; muốn giữ chú thích thì sửa file bằng tay.
 
-## Hiển thị
-Tab: `✦ ᴛᴀɴ ᴛʜᴜ | Steve [rank]`. Plugin chỉ **chèn danh hiệu vào đầu** tên đang có trong Tab, giữ nguyên phần rank/suffix của plugin khác phía sau; nếu plugin khác ghi đè tên, danh hiệu được chèn lại sau tối đa 2 giây. Nếu dùng plugin quản lý Tab (TAB...) thì `tab.enabled: false` và đặt `%astraxtitles_prefix%` vào tabprefix. Chat mặc định tắt (`chat.enabled`). PlaceholderAPI: `%astraxtitles_prefix%`, `_title`, `_id`, `_count`.
-
-## Kiểm thử thủ công nên làm
-- [ ] Mở khóa Elementer Hỏa + NguyenTo Lửa (`/nguyento unlock <tên> lua`, `/elementeradmin give <tên> voucher fire`...): trong ~5s có thông báo "Mở khóa danh hiệu Hỏa Viễn".
-- [ ] Chỉ có một trong hai plugin nguyên tố: KHÔNG mở khóa.
-- [ ] `/elementeradmin boss spawn dragon_lord` rồi hạ boss: tiến độ Long Thần.
-- [ ] Hạ 10 người chơi (2 tài khoản): hạ lại cùng người trong 120s không tính thêm.
-- [ ] Đeo Phong Nhã: thấy "Né tránh!" ngẫu nhiên; đeo Thủy Hộ: đứng trong lửa nhận ít sát thương hơn.
-- [ ] Long Hồn / Quang Hồi / Tử Vực: máu dưới ngưỡng kích hoạt đúng một lần mỗi 30s.
-- [ ] Đổi danh hiệu liên tục: không kẹt buff tốc độ/máu; thoát vào lại: buff còn đúng.
+## Hiển thị trong Tab: `[Rank] Steve | ✦ ᴛᴀɴ ᴛʜᴜ`
+### Cách 1 - server có plugin TAB + LuckPerms (khuyên dùng)
+1. Cài PlaceholderAPI (TAB đọc placeholder của AstraxTitles qua PlaceholderAPI). Trong `config.yml` của AstraxTitles giữ `tab.enabled: false`.
+2. Mở `plugins/TAB/groups.yml`, đặt (hoặc chạy lệnh `/tab group _DEFAULT_ tabsuffix %astraxtitles_suffix%`):
+```yaml
+_DEFAULT_:
+  tabprefix: "%luckperms-prefix%"
+  tabsuffix: "%astraxtitles_suffix%"
+```
+3. `/tab reload`. Nếu bạn đang dùng prefix khác (vd `%vault_prefix%`) thì giữ nguyên dòng `tabprefix` của bạn, chỉ thêm `tabsuffix`.
+- Người chơi không đeo danh hiệu thì suffix rỗng (không hiện dấu `|`).
+- Muốn danh hiệu thẳng cột bên phải thì bật *Aligned tabsuffix* trong `config.yml` của TAB.
+- Muốn đổi dấu phân cách/màu: sửa `tab.suffix-format` (mặc định `" &8| %title%"`).
+### Cách 2 - không có plugin quản lý Tab
+Đặt `tab.enabled: true`: plugin tự thêm danh hiệu vào tên trong Tab, mặc định **sau** tên (`tab.position: AFTER`), giữ nguyên rank của plugin khác. Đừng bật cùng lúc với plugin TAB (hai bên sẽ tranh nhau).
+### Placeholder
+`%astraxtitles_suffix%` (` | ✦ ᴛᴀɴ ᴛʜᴜ`), `%astraxtitles_prefix%` (`✦ ᴛᴀɴ ᴛʜᴜ | `), `%astraxtitles_title%` (chỉ danh hiệu), `%astraxtitles_id%`, `%astraxtitles_count%`.
+Chat mặc định tắt (`chat.enabled`).

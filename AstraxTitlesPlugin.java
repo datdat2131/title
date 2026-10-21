@@ -152,16 +152,18 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
     }
     public void unequip(Player p) { PlayerTitleData d = cache.get(p.getUniqueId()); if (d != null) { d.select(null); passives.reset(p); buffs.apply(p); refreshTab(p); } }
 
-    /** Prefix dùng cho Tab và PlaceholderAPI (Component rỗng nếu không đeo). */
-    public Component prefix(UUID id) { return build(id, "tab"); }
+    /** Danh hiệu dạng tiền tố "danh hiệu | " (chat hoặc Tab kiểu BEFORE). Rỗng nếu không đeo. */
+    public Component prefix(UUID id) { return build(id, "tab", "title-format", "%title% &8| &r"); }
+    /** Danh hiệu dạng hậu tố " | danh hiệu" - dùng cho Tab: "[Rank] Tên | danh hiệu" và placeholder %astraxtitles_suffix%. */
+    public Component suffix(UUID id) { return build(id, "tab", "suffix-format", " &8| %title%"); }
     /** Prefix dùng cho chat (chỉ khi chat.enabled=true). */
-    public Component chatPrefix(UUID id) { return build(id, "chat"); }
+    public Component chatPrefix(UUID id) { return build(id, "chat", "title-format", "&8[%title%&8] "); }
 
-    private Component build(UUID id, String section) {
+    private Component build(UUID id, String section, String formatKey, String def) {
         PlayerTitleData d = cache.get(id); TitleDef t = d == null ? null : registry.get(d.selected());
         if (t == null) return Component.empty();
         String shown = getConfig().getBoolean(section + ".small-caps", true) ? SmallCaps.convert(t.display()) : t.display();
-        return AMP.deserialize(getConfig().getString(section + ".title-format", "%title% &8| &r").replace("%title%", shown));
+        return AMP.deserialize(getConfig().getString(section + "." + formatKey, def).replace("%title%", shown));
     }
 
     private final Map<UUID, Component> tabBase = new HashMap<>();
@@ -169,15 +171,16 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
     private static String plain(Component c) { return net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(c); }
 
     /**
-     * Chèn danh hiệu vào ĐẦU tên trong Tab: "[danh hiệu] | Tên [rank]". Không ghi đè tên gốc: giữ nguyên phần plugin khác
-     * (rank/suffix) đã đặt, chỉ thêm prefix phía trước. Nếu plugin khác đổi lại tên, lần kiểm tra kế tiếp sẽ chèn lại.
+     * Chế độ dựng sẵn (khi KHÔNG dùng plugin TAB): thêm danh hiệu vào tên trong Tab, mặc định phía SAU tên: "[Rank] Tên | danh hiệu"
+     * (tab.position: BEFORE để đặt phía trước). Không ghi đè tên gốc: giữ nguyên phần plugin khác (rank) đã đặt. Nếu plugin khác đổi lại tên, lần kiểm tra kế tiếp sẽ chèn lại.
      */
     public void refreshTab(Player p) {
         if (!getConfig().getBoolean("tab.enabled", true)) return;
         UUID id = p.getUniqueId();
         Component cur = p.playerListName(); if (cur == null) cur = Component.text(p.getName());
         Component base = (tabApplied.containsKey(id) && plain(cur).equals(tabApplied.get(id)) && tabBase.containsKey(id)) ? tabBase.get(id) : cur; // còn nguyên của mình -> dùng lại tên gốc, tránh chèn đôi
-        Component result = prefix(id).append(base);
+        boolean before = "BEFORE".equalsIgnoreCase(getConfig().getString("tab.position", "AFTER"));
+        Component result = before ? prefix(id).append(base) : base.append(suffix(id));
         tabBase.put(id, base); tabApplied.put(id, plain(result));
         p.playerListName(result);
     }

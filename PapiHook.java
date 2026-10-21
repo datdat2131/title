@@ -6,7 +6,7 @@ import org.bukkit.OfflinePlayer;
 import vn.astrax.titles.AstraxTitlesPlugin;
 import vn.astrax.titles.model.*;
 
-/** %astraxtitles_prefix% (đã có màu §), %astraxtitles_title%, %astraxtitles_id%, %astraxtitles_count% */
+/** %astraxtitles_suffix% (cho tabsuffix), %astraxtitles_prefix%, %astraxtitles_title%, %astraxtitles_id%, %astraxtitles_count% - đã có màu § */
 public final class PapiHook extends PlaceholderExpansion {
     private final AstraxTitlesPlugin plugin;
     public PapiHook(AstraxTitlesPlugin plugin) { this.plugin = plugin; }
@@ -20,7 +20,8 @@ public final class PapiHook extends PlaceholderExpansion {
         TitleDef t = plugin.titles().get(d.selected());
         LegacyComponentSerializer sec = LegacyComponentSerializer.legacySection();
         return switch (params.toLowerCase()) {
-            case "prefix" -> sec.serialize(plugin.prefix(player.getUniqueId()));
+            case "suffix" -> sec.serialize(plugin.suffix(player.getUniqueId()));   // " | ✦ ᴛᴀɴ ᴛʜᴜ" (rỗng nếu không đeo) - dùng cho tabsuffix
+            case "prefix" -> sec.serialize(plugin.prefix(player.getUniqueId()));   // "✦ ᴛᴀɴ ᴛʜᴜ | "
             case "title" -> t == null ? "" : sec.serialize(AstraxTitlesPlugin.AMP.deserialize(t.display()));
             case "id" -> t == null ? "" : t.id();
             case "count" -> String.valueOf(d.unlocked().size());
