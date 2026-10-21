@@ -190,13 +190,14 @@ titles:
       - {type: TRAVEL_BLOCKS, target: 2000}
     buffs: { movement_speed: "30%", max_health: 5, armor: 2 }
 
-  vip_ruby:
-    display: "&c✪ VIP Ruby"
-    description: "Dành cho thành viên VIP3 (Ruby)."
+  vip:
+    display: "&e✪ VIP"
+    description: "Dành cho thành viên VIP3 trở lên."
     rarity: EPIC
-    icon: REDSTONE_BLOCK
+    icon: GOLD_INGOT
     requirements:
-      - {type: PERMISSION_NODE, filter: "group.vip3", label: "Đạt rank VIP3 (Ruby)"}
+      # Chỉ cần MỘT trong các nhóm LuckPerms dưới đây (vip3 trở lên). Thêm/bớt nhóm tùy server, cách nhau bằng dấu phẩy.
+      - {type: PERMISSION_NODE, filter: "group.vip3,group.vip4,group.vip5,group.vipmax", label: "Đạt rank VIP3 trở lên"}
     buffs: { attack_damage: 2, max_health: 6, armor: 3, attack_speed: 0.5 }
 
   tho_san_boss:

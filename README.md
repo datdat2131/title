@@ -1,8 +1,8 @@
-# AstraxTitles 1.2.0 - Danh hiệu nhiệm vụ cho BoxMine RPG
+# AstraxTitles 1.3.0 - Danh hiệu nhiệm vụ cho BoxMine RPG
 
 Danh hiệu mở khóa bằng nhiệm vụ, mỗi danh hiệu có **buff** và **nội tại** riêng, hiển thị **trước tên trong Tab** (chữ in hoa nhỏ). Paper 1.21.4, Java 21.
 
-> **Trạng thái:** logic (nhiệm vụ, tiến độ, mô tả nội tại) đã chạy 18 test đạt; phần Bukkit (nội tại chiến đấu, GUI, hook plugin khác) **chưa build bằng Maven và chưa chạy trên server thật**. Hãy thử trên server test.
+> **Trạng thái:** logic (nhiệm vụ, tiến độ, mô tả nội tại) đã chạy 19 test đạt; phần Bukkit (nội tại chiến đấu, GUI, hook plugin khác) **chưa build bằng Maven và chưa chạy trên server thật**. Hãy thử trên server test.
 
 ## Tích hợp với 2 plugin của bạn (hai plugin KHÁC NHAU)
 | Plugin | Cách đọc | Nhiệm vụ trong titles.yml |
@@ -35,13 +35,13 @@ Nhiệm vụ "mở khóa nguyên tố" được kiểm tra mỗi `poll-seconds` 
 | 13 | Bóng Tối | Elementer Bóng Tối + NguyenTo Bóng Tối + 100 kill | +3 dame, +8 máu, đánh +0.6, +10% tốc độ | Hắc Thực / Ám Ảnh / Tử Vực / Hắc Giới (+10% hút máu) |
 | 14 | Khai Khoáng | Đào 4000 block + hạ 10 người chơi | đào +2, +20% tốc độ, đánh +0.15 | - |
 | 15 | Nhà Thám Hiểm | Di chuyển 2000 block | +30% tốc độ, +5 máu, +2 giáp | - |
-| 16 | VIP Ruby | Có nhóm `group.vip3` (rank VIP3 Ruby) | +2 dame, +6 máu, +3 giáp, đánh +0.5 | - |
+| 16 | VIP | Rank VIP3 trở lên (`group.vip3/vip4/vip5/vipmax`) | +2 dame, +6 máu, +3 giáp, đánh +0.5 | - |
 | 17 | Thợ Săn Boss | Hạ 10 boss bất kỳ | +2 dame, đánh +0.25 | +50% sát thương lên Boss |
 | 18 | Chiến Binh Bất Khuất | Chuỗi hạ gục 50 người chơi (không chết) | +2 dame, +5 máu | giảm 20% sát thương nhận |
 
 ## Các điểm mình đã diễn giải (sửa trong titles.yml nếu khác ý bạn)
 - **Khai Khoáng "10 kill":** hiểu là hạ 10 **người chơi**. Muốn đổi sang quái: `type: KILL_MOB`.
-- **VIP Ruby:** kiểm tra quyền `group.vip3` (LuckPerms tự cấp quyền `group.<tên nhóm>` cho thành viên nhóm, kể cả nhóm kế thừa). Nếu nhóm của bạn tên khác (vd `ruby`), sửa `filter`. Không dùng LuckPerms thì đặt `filter` là một permission bất kỳ.
+- **VIP:** chỉ có một danh hiệu `VIP` (không có Ruby). Mở khóa khi người chơi thuộc MỘT trong các nhóm LuckPerms `vip3`, `vip4`, `vip5`, `vipmax` (LuckPerms tự cấp quyền `group.<tên nhóm>`). Server có nhóm tên khác thì sửa `filter` của `vip` trong `titles.yml`.
 - **Thợ Săn Boss:** tính boss AstraxElementer và boss vanilla có giao diện Boss (Ender Dragon, Wither). Warden/Elder Guardian và boss của plugin khác chưa tính.
 - **Chuỗi hạ gục:** mặc định chỉ tính **người chơi** (`filter: PLAYER`), reset khi chết, lưu qua restart. Muốn tính cả quái: `filter: ANY`.
 - **Di chuyển:** đo quãng đường ngang mỗi 2 giây; không tính teleport, Creative/Spectator, và bước nhảy > 150 block. Đi thuyền/ngựa/cánh cánh vẫn tính; máy chạy tự động (nước, ray) có thể farm được.
@@ -66,8 +66,16 @@ NguyenTo đặt giá trị gốc (base) của máu/sát thương/tốc độ; As
 `/title` (menu), `/title equip <id>`, `/title off`, `/title list` - `astraxtitles.use`.
 `/titleadmin reload | list | give <p> <id> | take <p> <id> | progress <p> <id> <nhiệm vụ#> <số> | check <p>` - `astraxtitles.admin`.
 
+## Chỉnh sửa danh hiệu (tên, buff...)
+**Cách 1 - sửa file:** mở `plugins/AstraxTitles/titles.yml`, đổi `display` (tên), `description`, `rarity`, `icon`, `buffs`, `requirements`, `passives`, rồi `/titleadmin reload`.
+**Cách 2 - ngay trong game (cần `astraxtitles.admin`):**
+- `/titleadmin set <id> display &6✦ Tên Mới` (hoặc `description`, `rarity`, `icon`)
+- `/titleadmin buff <id> attack_damage 2.5` (số thường) hoặc `/titleadmin buff <id> movement_speed 10%` (phần trăm)
+- `/titleadmin buff <id> attack_damage remove` để xóa buff
+Mỗi lần sửa plugin tự sao lưu `titles.yml.bak` rồi tải lại. Lưu ý: lệnh ghi lại cả file nên có thể làm mất một số dòng chú thích; muốn giữ chú thích thì sửa file bằng tay.
+
 ## Hiển thị
-Tab: `✦ ᴛᴀɴ ᴛʜᴜ | Steve` (rank của plugin khác nằm sau tên). Nếu dùng plugin quản lý Tab (TAB...) thì `tab.enabled: false` và đặt `%astraxtitles_prefix%` vào tabprefix. Chat mặc định tắt (`chat.enabled`). PlaceholderAPI: `%astraxtitles_prefix%`, `_title`, `_id`, `_count`.
+Tab: `✦ ᴛᴀɴ ᴛʜᴜ | Steve [rank]`. Plugin chỉ **chèn danh hiệu vào đầu** tên đang có trong Tab, giữ nguyên phần rank/suffix của plugin khác phía sau; nếu plugin khác ghi đè tên, danh hiệu được chèn lại sau tối đa 2 giây. Nếu dùng plugin quản lý Tab (TAB...) thì `tab.enabled: false` và đặt `%astraxtitles_prefix%` vào tabprefix. Chat mặc định tắt (`chat.enabled`). PlaceholderAPI: `%astraxtitles_prefix%`, `_title`, `_id`, `_count`.
 
 ## Kiểm thử thủ công nên làm
 - [ ] Mở khóa Elementer Hỏa + NguyenTo Lửa (`/nguyento unlock <tên> lua`, `/elementeradmin give <tên> voucher fire`...): trong ~5s có thông báo "Mở khóa danh hiệu Hỏa Viễn".

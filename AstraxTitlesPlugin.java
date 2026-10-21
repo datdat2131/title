@@ -65,7 +65,7 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
         if (autosaveTask != -1) Bukkit.getScheduler().cancelTask(autosaveTask);
         if (playtimeTask != -1) Bukkit.getScheduler().cancelTask(playtimeTask);
         if (pollTask != -1) Bukkit.getScheduler().cancelTask(pollTask);
-        for (Player p : Bukkit.getOnlinePlayers()) buffs.remove(p);
+        for (Player p : Bukkit.getOnlinePlayers()) { buffs.remove(p); Component base = tabBase.get(p.getUniqueId()); if (base != null) p.playerListName(base); } // trả tên Tab về như cũ
         for (PlayerTitleData d : cache.values()) store.saveAsync(d);
         cache.clear(); store.close();
     }
@@ -78,7 +78,7 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
     }
 
     /** Playtime: +1 phút cho mỗi người chơi online. */
-    private void tickTravel() { travel.tick(Bukkit.getOnlinePlayers()); }
+    private void tickTravel() { travel.tick(Bukkit.getOnlinePlayers()); for (Player p : Bukkit.getOnlinePlayers()) tabGuard(p); }
     private void tickPlaytime() {
         for (Player p : Bukkit.getOnlinePlayers()) progress(p, AchievementType.PLAYTIME_MINUTES, "MINUTE", 1);
     }
@@ -97,7 +97,7 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
             case PERMISSION -> p.hasPermission("astraxtitles.title." + def.id());
             case ELEMENTER_UNLOCK -> elementer.hasUnlocked(p.getUniqueId(), filter);
             case NGUYENTO_UNLOCK -> nguyento.owns(p, filter);
-            case PERMISSION_NODE -> filter != null && p.hasPermission(filter);
+            case PERMISSION_NODE -> Requirement.nodes(filter).stream().anyMatch(p::hasPermission);
             default -> false; })) onUnlocked(p, t);
     }
     /** Chuỗi hạ gục: tăng khi hạ gục, reset khi chết. Lưu trong dữ liệu người chơi (không mất khi restart). */
@@ -164,9 +164,28 @@ public final class AstraxTitlesPlugin extends JavaPlugin {
         return AMP.deserialize(getConfig().getString(section + ".title-format", "%title% &8| &r").replace("%title%", shown));
     }
 
-    /** Đặt tên trong Tab: "<title> | Tên". Phần rank (suffix) do plugin khác thêm phía sau nếu có. */
+    private final Map<UUID, Component> tabBase = new HashMap<>();
+    private final Map<UUID, String> tabApplied = new HashMap<>();
+    private static String plain(Component c) { return net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(c); }
+
+    /**
+     * Chèn danh hiệu vào ĐẦU tên trong Tab: "[danh hiệu] | Tên [rank]". Không ghi đè tên gốc: giữ nguyên phần plugin khác
+     * (rank/suffix) đã đặt, chỉ thêm prefix phía trước. Nếu plugin khác đổi lại tên, lần kiểm tra kế tiếp sẽ chèn lại.
+     */
     public void refreshTab(Player p) {
         if (!getConfig().getBoolean("tab.enabled", true)) return;
-        p.playerListName(prefix(p.getUniqueId()).append(Component.text(p.getName())));
+        UUID id = p.getUniqueId();
+        Component cur = p.playerListName(); if (cur == null) cur = Component.text(p.getName());
+        Component base = (tabApplied.containsKey(id) && plain(cur).equals(tabApplied.get(id)) && tabBase.containsKey(id)) ? tabBase.get(id) : cur; // còn nguyên của mình -> dùng lại tên gốc, tránh chèn đôi
+        Component result = prefix(id).append(base);
+        tabBase.put(id, base); tabApplied.put(id, plain(result));
+        p.playerListName(result);
     }
+    /** Nếu plugin khác ghi đè tên trong Tab thì chèn lại danh hiệu. */
+    private void tabGuard(Player p) {
+        if (!getConfig().getBoolean("tab.enabled", true)) return;
+        Component cur = p.playerListName(); String applied = tabApplied.get(p.getUniqueId());
+        if (applied == null || cur == null || !applied.equals(plain(cur))) refreshTab(p);
+    }
+    public void forgetTab(UUID id) { tabBase.remove(id); tabApplied.remove(id); }
 }

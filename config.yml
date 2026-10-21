@@ -1,5 +1,5 @@
 # ===== AstraxTitles =====
-# Danh hiệu hiện TRƯỚC tên trong Tab:  ᴛᴀɴ ᴛʜᴜ | Steve   (rank của plugin khác nằm phía sau tên)
+# Danh hiệu hiện TRƯỚC tên trong Tab:  ᴛᴀɴ ᴛʜᴜ | Steve [rank]   (phần rank/suffix của plugin khác được giữ nguyên, nằm sau tên)
 tab:
   enabled: true                  # false nếu plugin Tab/TAB của bạn quản lý tab -> dùng %astraxtitles_prefix% trong plugin đó
   small-caps: true               # tự đổi chữ danh hiệu sang in hoa nhỏ (bỏ dấu tiếng Việt)

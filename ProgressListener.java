@@ -39,7 +39,7 @@ public final class ProgressListener implements Listener {
         plugin.buffs().remove(e.getPlayer());
         PlayerTitleData d = plugin.removeData(e.getPlayer().getUniqueId());
         if (d != null) plugin.store().saveAsync(d);
-        plugin.gui().forget(e.getPlayer().getUniqueId()); pairs.forget(e.getPlayer().getUniqueId());
+        plugin.gui().forget(e.getPlayer().getUniqueId()); pairs.forget(e.getPlayer().getUniqueId()); plugin.forgetTab(e.getPlayer().getUniqueId());
     }
     @EventHandler public void onRespawn(PlayerRespawnEvent e) { Player p = e.getPlayer(); Bukkit.getScheduler().runTask(plugin, () -> { if (p.isOnline()) plugin.buffs().apply(p); }); }
 

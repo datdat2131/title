@@ -11,6 +11,13 @@ public record Requirement(AchievementType type, String filter, long target, Stri
 
     public Requirement { target = type != null && type.counted() ? Math.max(1, target) : 1; }
 
+    /** Danh sách quyền cho PERMISSION_NODE: "group.vip3,group.vip4" hoặc "a|b" = chỉ cần MỘT trong số đó. */
+    public static java.util.List<String> nodes(String filter) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        if (filter == null) return out;
+        for (String s : filter.split("[,|]")) if (!s.isBlank()) out.add(s.trim());
+        return out;
+    }
     public boolean matches(String key) { return filter == null || filter.isBlank() || filter.equalsIgnoreCase(key); }
     public static String reqKey(String titleId, int index) { return titleId.toLowerCase() + "~" + index; }
 
@@ -31,7 +38,7 @@ public record Requirement(AchievementType type, String filter, long target, Stri
             case NGUYENTO_UNLOCK -> "Mở khóa nguyên tố " + nguyentoName(filter) + " (plugin NguyenTo)";
             case TRAVEL_BLOCKS -> "Di chuyển " + target + " block";
             case KILL_STREAK -> "Đạt chuỗi hạ gục " + target + ("ANY".equalsIgnoreCase(filter) ? " (tính cả quái)" : " người chơi liên tiếp") + ", không chết";
-            case PERMISSION_NODE -> "Đạt rank/quyền " + (filter == null ? "?" : filter);
+            case PERMISSION_NODE -> "Đạt rank/quyền " + (filter == null ? "?" : String.join(" hoặc ", nodes(filter)));
             case PERMISSION -> "Nhận từ quyền đặc biệt";
             case MANUAL -> "Do admin cấp";
         };

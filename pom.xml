@@ -3,7 +3,7 @@
  <modelVersion>4.0.0</modelVersion>
  <groupId>vn.astrax</groupId>
  <artifactId>AstraxTitles</artifactId>
- <version>1.2.0</version>
+ <version>1.3.0</version>
  <packaging>jar</packaging>
  <properties>
   <maven.compiler.release>21</maven.compiler.release>
@@ -19,16 +19,22 @@
   <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>5.11.3</version><scope>test</scope></dependency>
  </dependencies>
  <build>
+  <sourceDirectory>.</sourceDirectory>
+  <testSourceDirectory>tests</testSourceDirectory>
   <finalName>AstraxTitles-${project.version}</finalName>
-  <!-- Flat layout: Java sources and plugin resources are in repository root. -->
-  <sourceDirectory>${project.basedir}</sourceDirectory>
-  <testSourceDirectory>${project.basedir}</testSourceDirectory>
   <resources>
-   <resource><directory>${project.basedir}</directory><filtering>true</filtering><includes><include>plugin.yml</include></includes></resource>
-   <resource><directory>${project.basedir}</directory><filtering>false</filtering><includes><include>config.yml</include><include>titles.yml</include></includes></resource>
+   <resource><directory>.</directory><filtering>true</filtering><includes><include>plugin.yml</include></includes></resource>
+   <resource><directory>.</directory><filtering>false</filtering><excludes><exclude>plugin.yml</exclude></excludes></resource>
   </resources>
   <plugins>
-   <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.0</version><configuration><release>21</release><excludes><exclude>**/*Test.java</exclude><exclude>target/**</exclude></excludes></configuration></plugin>
+   <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.0</version><configuration>
+      <release>21</release>
+      <excludes>
+        <exclude>tests/**</exclude>
+        <exclude>target/**</exclude>
+        <exclude>.git/**</exclude>
+      </excludes>
+    </configuration></plugin>
    <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.2</version></plugin>
   </plugins>
  </build>
