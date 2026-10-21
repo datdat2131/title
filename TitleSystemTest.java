@@ -136,4 +136,9 @@ class TitleSystemTest {
         r.progress(d, AchievementType.KILL_PLAYER, "PLAYER", 2); assertTrue(d.has("miner"));
         assertTrue(Requirement.reqKey("X", 1).equals("x~1"));
     }
+    @Test void anyOfPermissionNodes() {
+        assertEquals(List.of("group.vip3", "group.vip4", "group.vipmax"), Requirement.nodes("group.vip3, group.vip4|group.vipmax"));
+        assertTrue(Requirement.nodes(null).isEmpty()); assertTrue(Requirement.nodes(" , ").isEmpty());
+        assertTrue(new Requirement(AchievementType.PERMISSION_NODE, "group.vip3,group.vip4", 1, null).describe().contains("group.vip3 hoặc group.vip4"));
+    }
 }
